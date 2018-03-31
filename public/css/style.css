@@ -1,0 +1,10 @@
+.wrapper {
+  padding: 50px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.price {
+  font-size: 2em;
+  float: right;
+}

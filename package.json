@@ -1,0 +1,11 @@
+{
+  "name": "elm-flight-dispatcher",
+  "version": "1.0.0",
+  "description": "Flight dispatcher app in Elm",
+  "main": "index.js",
+  "author": "Nick Hibberd",
+  "license": "MIT",
+  "devDependencies": {
+    "express": "4.16.3"
+  }
+}
