@@ -12416,40 +12416,10 @@ var _elm_lang$html$Html_Events$Options = F2(
 		return {stopPropagation: a, preventDefault: b};
 	});
 
-var _user$project$Main$isEqual = F2(
-	function (maybe, a) {
-		return A2(
-			_elm_lang$core$Maybe$withDefault,
-			false,
-			A2(
-				_elm_lang$core$Maybe$map,
-				F2(
-					function (x, y) {
-						return _elm_lang$core$Native_Utils.eq(x, y);
-					})(a),
-				maybe));
-	});
-var _user$project$Main$renderOption = F2(
-	function (isSelected, value) {
-		return A2(
-			_elm_lang$html$Html$option,
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$selected(isSelected),
-				_1: {ctor: '[]'}
-			},
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html$text(value),
-				_1: {ctor: '[]'}
-			});
-	});
 var _user$project$Main$renderPrice = function (_p0) {
 	var _p1 = _p0;
-	var _p2 = _p1.price;
-	if (_p2.ctor === 'Nothing') {
-		return _elm_lang$html$Html$text('');
-	} else {
+	var _p2 = _p1.selected;
+	if (_p2.ctor === 'CitySelected') {
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -12470,198 +12440,203 @@ var _user$project$Main$renderPrice = function (_p0) {
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$html$Html$text(
-						_elm_lang$core$Basics$toString(_p2._0)),
+						_elm_lang$core$Basics$toString(_p2._0.price)),
 					_1: {ctor: '[]'}
 				}
 			});
+	} else {
+		return _elm_lang$html$Html$text('');
 	}
 };
-var _user$project$Main$renderCity = F2(
-	function (selectedCity, city) {
+var _user$project$Main$renderOption = F2(
+	function (isSelected, value) {
 		return A2(
-			_user$project$Main$renderOption,
-			A2(_user$project$Main$isEqual, selectedCity, city),
-			city.name);
+			_elm_lang$html$Html$option,
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$selected(isSelected),
+				_1: {ctor: '[]'}
+			},
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html$text(value),
+				_1: {ctor: '[]'}
+			});
 	});
-var _user$project$Main$cityOptions = function (_p3) {
-	var _p4 = _p3;
-	var _p5 = _p4.selectedCountry;
-	if (_p5.ctor === 'Nothing') {
-		return {ctor: '[]'};
-	} else {
-		return A2(
-			_elm_lang$core$List$map,
-			_user$project$Main$renderCity(_p4.selectedCity),
-			_p5._0.cities);
+var _user$project$Main$renderCity = F2(
+	function (selected, city) {
+		var isSelected = function () {
+			var _p3 = selected;
+			if (_p3.ctor === 'CitySelected') {
+				return _elm_lang$core$Native_Utils.eq(city, _p3._0);
+			} else {
+				return false;
+			}
+		}();
+		return A2(_user$project$Main$renderOption, isSelected, city.name);
+	});
+var _user$project$Main$countryName = function (country) {
+	var _p4 = country;
+	switch (_p4.ctor) {
+		case 'Australia':
+			return 'Australia';
+		case 'England':
+			return 'England';
+		default:
+			return 'France';
 	}
 };
 var _user$project$Main$renderCountry = F2(
-	function (selectedCountry, country) {
+	function (selected, country) {
+		var isSelected = function () {
+			var _p5 = selected;
+			switch (_p5.ctor) {
+				case 'CitySelected':
+					return _elm_lang$core$Native_Utils.eq(country, _p5._0.country);
+				case 'CountrySelected':
+					return _elm_lang$core$Native_Utils.eq(country, _p5._0);
+				default:
+					return false;
+			}
+		}();
 		return A2(
 			_user$project$Main$renderOption,
-			A2(_user$project$Main$isEqual, selectedCountry, country),
-			country.name);
+			isSelected,
+			_user$project$Main$countryName(country));
 	});
-var _user$project$Main$setPrice = function (city) {
-	var dict = _elm_lang$core$Dict$fromList(
-		{
-			ctor: '::',
-			_0: {ctor: '_Tuple2', _0: 'Melbourne', _1: 100},
-			_1: {
-				ctor: '::',
-				_0: {ctor: '_Tuple2', _0: 'Sydney', _1: 110},
-				_1: {
-					ctor: '::',
-					_0: {ctor: '_Tuple2', _0: 'London', _1: 1000},
-					_1: {
-						ctor: '::',
-						_0: {ctor: '_Tuple2', _0: 'Manchester', _1: 1200},
-						_1: {
-							ctor: '::',
-							_0: {ctor: '_Tuple2', _0: 'Paris', _1: 900},
-							_1: {
-								ctor: '::',
-								_0: {ctor: '_Tuple2', _0: 'Lille', _1: 800},
-								_1: {ctor: '[]'}
-							}
-						}
-					}
-				}
-			}
-		});
-	return A2(_elm_lang$core$Dict$get, city, dict);
+var _user$project$Main$City = F3(
+	function (a, b, c) {
+		return {country: a, name: b, price: c};
+	});
+var _user$project$Main$Model = function (a) {
+	return {selected: a};
 };
-var _user$project$Main$find = F2(
-	function (predicate, list) {
-		find:
-		while (true) {
-			var _p6 = list;
-			if (_p6.ctor === '[]') {
-				return _elm_lang$core$Maybe$Nothing;
-			} else {
-				var _p7 = _p6._0;
-				if (predicate(_p7)) {
-					return _elm_lang$core$Maybe$Just(_p7);
-				} else {
-					var _v5 = predicate,
-						_v6 = _p6._1;
-					predicate = _v5;
-					list = _v6;
-					continue find;
-				}
-			}
-		}
-	});
-var _user$project$Main$countries = {
+var _user$project$Main$France = {ctor: 'France'};
+var _user$project$Main$England = {ctor: 'England'};
+var _user$project$Main$Australia = {ctor: 'Australia'};
+var _user$project$Main$cities = {
 	ctor: '::',
-	_0: {
-		name: 'Australia',
-		cities: {
-			ctor: '::',
-			_0: {name: 'Melbourne', price: 100},
-			_1: {
-				ctor: '::',
-				_0: {name: 'Sydney', price: 110},
-				_1: {ctor: '[]'}
-			}
-		}
-	},
+	_0: {name: 'Melbourne', country: _user$project$Main$Australia, price: 100},
 	_1: {
 		ctor: '::',
-		_0: {
-			name: 'England',
-			cities: {
-				ctor: '::',
-				_0: {name: 'London', price: 1000},
-				_1: {
-					ctor: '::',
-					_0: {name: 'Manchester', price: 1200},
-					_1: {ctor: '[]'}
-				}
-			}
-		},
+		_0: {name: 'Sydney', country: _user$project$Main$Australia, price: 110},
 		_1: {
 			ctor: '::',
-			_0: {
-				name: 'France',
-				cities: {
+			_0: {name: 'London', country: _user$project$Main$England, price: 1000},
+			_1: {
+				ctor: '::',
+				_0: {name: 'Manchester', country: _user$project$Main$England, price: 1200},
+				_1: {
 					ctor: '::',
-					_0: {name: 'Paris', price: 900},
+					_0: {name: 'Paris', country: _user$project$Main$France, price: 900},
 					_1: {
 						ctor: '::',
-						_0: {name: 'Lille', price: 800},
+						_0: {name: 'Lille', country: _user$project$Main$France, price: 800},
 						_1: {ctor: '[]'}
 					}
 				}
-			},
-			_1: {ctor: '[]'}
+			}
 		}
 	}
 };
-var _user$project$Main$setCountry = F2(
-	function (string, model) {
-		return A2(
-			_user$project$Main$find,
-			function (country) {
-				return _elm_lang$core$Native_Utils.eq(country.name, string);
-			},
-			_user$project$Main$countries);
-	});
-var _user$project$Main$cities = A2(
-	_elm_lang$core$List$concatMap,
-	function (_) {
-		return _.cities;
-	},
-	_user$project$Main$countries);
-var _user$project$Main$setCity = F2(
-	function (string, model) {
-		return A2(
-			_user$project$Main$find,
-			function (city) {
-				return _elm_lang$core$Native_Utils.eq(city.name, string);
-			},
-			_user$project$Main$cities);
-	});
+var _user$project$Main$activeCities = function (_p6) {
+	var _p7 = _p6;
+	var _p8 = _p7.selected;
+	switch (_p8.ctor) {
+		case 'CitySelected':
+			return A2(
+				_elm_lang$core$List$filter,
+				function (_p9) {
+					return A2(
+						F2(
+							function (x, y) {
+								return _elm_lang$core$Native_Utils.eq(x, y);
+							}),
+						_p8._0.country,
+						function (_) {
+							return _.country;
+						}(_p9));
+				},
+				_user$project$Main$cities);
+		case 'CountrySelected':
+			return A2(
+				_elm_lang$core$List$filter,
+				function (_p10) {
+					return A2(
+						F2(
+							function (x, y) {
+								return _elm_lang$core$Native_Utils.eq(x, y);
+							}),
+						_p8._0,
+						function (_) {
+							return _.country;
+						}(_p10));
+				},
+				_user$project$Main$cities);
+		default:
+			return _user$project$Main$cities;
+	}
+};
+var _user$project$Main$None = {ctor: 'None'};
+var _user$project$Main$model = {selected: _user$project$Main$None};
+var _user$project$Main$CountrySelected = function (a) {
+	return {ctor: 'CountrySelected', _0: a};
+};
+var _user$project$Main$setCountry = function (string) {
+	var _p11 = string;
+	switch (_p11) {
+		case 'Australia':
+			return _user$project$Main$CountrySelected(_user$project$Main$Australia);
+		case 'England':
+			return _user$project$Main$CountrySelected(_user$project$Main$England);
+		case 'France':
+			return _user$project$Main$CountrySelected(_user$project$Main$France);
+		default:
+			return _user$project$Main$None;
+	}
+};
+var _user$project$Main$CitySelected = function (a) {
+	return {ctor: 'CitySelected', _0: a};
+};
+var _user$project$Main$setCity = function (string) {
+	return A2(
+		_elm_lang$core$Maybe$withDefault,
+		_user$project$Main$None,
+		A2(
+			_elm_lang$core$Maybe$map,
+			_user$project$Main$CitySelected,
+			_elm_lang$core$List$head(
+				A2(
+					_elm_lang$core$List$filter,
+					function (_p12) {
+						return A2(
+							F2(
+								function (x, y) {
+									return _elm_lang$core$Native_Utils.eq(x, y);
+								}),
+							string,
+							function (_) {
+								return _.name;
+							}(_p12));
+					},
+					_user$project$Main$cities))));
+};
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p8 = msg;
-		if (_p8.ctor === 'SelectCountry') {
+		var _p13 = msg;
+		if (_p13.ctor === 'SelectCountry') {
 			return _elm_lang$core$Native_Utils.update(
 				model,
 				{
-					selectedCountry: A2(_user$project$Main$setCountry, _p8._0, model),
-					selectedCity: _elm_lang$core$Maybe$Nothing,
-					price: _elm_lang$core$Maybe$Nothing
+					selected: _user$project$Main$setCountry(_p13._0)
 				});
 		} else {
-			var _p9 = _p8._0;
 			return _elm_lang$core$Native_Utils.update(
 				model,
 				{
-					selectedCity: A2(_user$project$Main$setCity, _p9, model),
-					price: _user$project$Main$setPrice(_p9)
+					selected: _user$project$Main$setCity(_p13._0)
 				});
 		}
-	});
-var _user$project$Main$countryOptions = function (_p10) {
-	var _p11 = _p10;
-	return A2(
-		_elm_lang$core$List$map,
-		_user$project$Main$renderCountry(_p11.selectedCountry),
-		_user$project$Main$countries);
-};
-var _user$project$Main$model = {selectedCountry: _elm_lang$core$Maybe$Nothing, selectedCity: _elm_lang$core$Maybe$Nothing, price: _elm_lang$core$Maybe$Nothing};
-var _user$project$Main$Country = F2(
-	function (a, b) {
-		return {name: a, cities: b};
-	});
-var _user$project$Main$City = F2(
-	function (a, b) {
-		return {name: a, price: b};
-	});
-var _user$project$Main$Model = F3(
-	function (a, b, c) {
-		return {selectedCountry: a, selectedCity: b, price: c};
 	});
 var _user$project$Main$SelectCity = function (a) {
 	return {ctor: 'SelectCity', _0: a};
@@ -12695,14 +12670,23 @@ var _user$project$Main$view = function (model) {
 								_1: {ctor: '[]'}
 							}
 						},
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							{
+						{
+							ctor: '::',
+							_0: A2(_user$project$Main$renderOption, false, 'Select Country'),
+							_1: {
 								ctor: '::',
-								_0: A2(_user$project$Main$renderOption, true, 'Select Country'),
-								_1: {ctor: '[]'}
-							},
-							_user$project$Main$countryOptions(model))),
+								_0: A2(_user$project$Main$renderCountry, model.selected, _user$project$Main$Australia),
+								_1: {
+									ctor: '::',
+									_0: A2(_user$project$Main$renderCountry, model.selected, _user$project$Main$England),
+									_1: {
+										ctor: '::',
+										_0: A2(_user$project$Main$renderCountry, model.selected, _user$project$Main$France),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}),
 					_1: {ctor: '[]'}
 				}),
 			_1: {
@@ -12727,10 +12711,13 @@ var _user$project$Main$view = function (model) {
 								_elm_lang$core$Basics_ops['++'],
 								{
 									ctor: '::',
-									_0: A2(_user$project$Main$renderOption, true, 'Select City'),
+									_0: A2(_user$project$Main$renderOption, false, 'Select City'),
 									_1: {ctor: '[]'}
 								},
-								_user$project$Main$cityOptions(model))),
+								A2(
+									_elm_lang$core$List$map,
+									_user$project$Main$renderCity(model.selected),
+									_user$project$Main$activeCities(model)))),
 						_1: {ctor: '[]'}
 					}),
 				_1: {

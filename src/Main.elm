@@ -14,23 +14,55 @@ main =
         }
 
 
-type alias Country =
-    { name : String
-    , cities : List City
-    }
+type Country
+    = Australia
+    | England
+    | France
+
+
+type Selected
+    = CitySelected City
+    | CountrySelected Country
+    | None
 
 
 type alias City =
-    { name : String
+    { country : Country
+    , name : String
     , price : Int
     }
 
 
 type alias Model =
-    { selectedCountry : Maybe Country
-    , selectedCity : Maybe City
-    , price : Maybe Int
-    }
+    { selected : Selected }
+
+
+cities =
+    [ { name = "Melbourne"
+      , country = Australia
+      , price = 100
+      }
+    , { name = "Sydney"
+      , country = Australia
+      , price = 110
+      }
+    , { name = "London"
+      , country = England
+      , price = 1000
+      }
+    , { name = "Manchester"
+      , country = England
+      , price = 1200
+      }
+    , { name = "Paris"
+      , country = France
+      , price = 900
+      }
+    , { name = "Lille"
+      , country = France
+      , price = 800
+      }
+    ]
 
 
 
@@ -39,33 +71,7 @@ type alias Model =
 
 model : Model
 model =
-    { selectedCountry = Nothing
-    , selectedCity = Nothing
-    , price = Nothing
-    }
-
-
-countries : List Country
-countries =
-    [ { name = "Australia"
-      , cities =
-            [ { name = "Melbourne", price = 100 }
-            , { name = "Sydney", price = 110 }
-            ]
-      }
-    , { name = "England"
-      , cities =
-            [ { name = "London", price = 1000 }
-            , { name = "Manchester", price = 1200 }
-            ]
-      }
-    , { name = "France"
-      , cities =
-            [ { name = "Paris", price = 900 }
-            , { name = "Lille", price = 800 }
-            ]
-      }
-    ]
+    { selected = None }
 
 
 
@@ -81,61 +87,35 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         SelectCountry country ->
-            { model
-                | selectedCountry = setCountry country model
-                , selectedCity = Nothing
-                , price = Nothing
-            }
+            { model | selected = setCountry country }
 
         SelectCity city ->
-            { model
-                | selectedCity = setCity city model
-                , price = setPrice city
-            }
+            { model | selected = setCity city }
 
 
-setCountry : String -> Model -> Maybe Country
-setCountry string model =
-    find (\country -> country.name == string) countries
+setCountry : String -> Selected
+setCountry string =
+    case string of
+        "Australia" ->
+            CountrySelected Australia
+
+        "England" ->
+            CountrySelected England
+
+        "France" ->
+            CountrySelected France
+
+        _ ->
+            None
 
 
-setCity : String -> Model -> Maybe City
-setCity string model =
-    find (\city -> city.name == string) <| cities
-
-
-cities : List City
-cities =
-    List.concatMap .cities countries
-
-
-find : (a -> Bool) -> List a -> Maybe a
-find predicate list =
-    case list of
-        [] ->
-            Nothing
-
-        first :: rest ->
-            if predicate first then
-                Just first
-            else
-                find predicate rest
-
-
-setPrice : String -> Maybe Int
-setPrice city =
-    let
-        dict =
-            Dict.fromList
-                [ ( "Melbourne", 100 )
-                , ( "Sydney", 110 )
-                , ( "London", 1000 )
-                , ( "Manchester", 1200 )
-                , ( "Paris", 900 )
-                , ( "Lille", 800 )
-                ]
-    in
-        Dict.get city dict
+setCity : String -> Selected
+setCity string =
+    cities
+        |> List.filter (.name >> (==) string)
+        |> List.head
+        |> Maybe.map CitySelected
+        |> Maybe.withDefault None
 
 
 
@@ -151,9 +131,11 @@ view model =
                 , onInput SelectCountry
                 ]
               <|
-                [ renderOption True "Select Country"
+                [ renderOption False "Select Country"
+                , renderCountry model.selected Australia
+                , renderCountry model.selected England
+                , renderCountry model.selected France
                 ]
-                    ++ countryOptions model
             ]
         , div []
             [ select
@@ -161,50 +143,69 @@ view model =
                 , onInput SelectCity
                 ]
               <|
-                [ renderOption True "Select City"
+                [ renderOption False "Select City"
                 ]
-                    ++ (cityOptions model)
+                    ++ (activeCities model |> List.map (renderCity model.selected))
             ]
         , renderPrice model
         ]
 
 
-countryOptions : Model -> List (Html Msg)
-countryOptions { selectedCountry } =
-    List.map (renderCountry selectedCountry) countries
+countryName : Country -> String
+countryName country =
+    case country of
+        Australia ->
+            "Australia"
+
+        England ->
+            "England"
+
+        France ->
+            "France"
 
 
-renderCountry : Maybe Country -> Country -> Html Msg
-renderCountry selectedCountry country =
-    renderOption (isEqual selectedCountry country) country.name
+activeCities : Model -> List City
+activeCities { selected } =
+    case selected of
+        CitySelected selectedCity ->
+            List.filter (.country >> (==) selectedCity.country) cities
+
+        CountrySelected selectedCountry ->
+            List.filter (.country >> (==) selectedCountry) cities
+
+        None ->
+            cities
 
 
-cityOptions : Model -> List (Html Msg)
-cityOptions { selectedCountry, selectedCity } =
-    case selectedCountry of
-        Nothing ->
-            []
+renderCountry : Selected -> Country -> Html Msg
+renderCountry selected country =
+    let
+        isSelected =
+            case selected of
+                CitySelected selectedCity ->
+                    country == selectedCity.country
 
-        Just country ->
-            List.map (renderCity selectedCity) country.cities
+                CountrySelected selectedCountry ->
+                    country == selectedCountry
+
+                None ->
+                    False
+    in
+        renderOption isSelected <| countryName country
 
 
-renderCity : Maybe City -> City -> Html Msg
-renderCity selectedCity city =
-    renderOption (isEqual selectedCity city) city.name
+renderCity : Selected -> City -> Html Msg
+renderCity selected city =
+    let
+        isSelected =
+            case selected of
+                CitySelected selectedCity ->
+                    city == selectedCity
 
-
-renderPrice : Model -> Html Msg
-renderPrice { price } =
-    case price of
-        Nothing ->
-            text ""
-
-        Just val ->
-            div [ class "price" ]
-                [ small [] [ text "from $" ]
-                , text <| toString val
-                ]
+                _ ->
+                    False
+    in
+        renderOption isSelected city.name
 
 
 renderOption : Bool -> String -> Html Msg
@@ -212,8 +213,14 @@ renderOption isSelected value =
     option [ selected isSelected ] [ text value ]
 
 
-isEqual : Maybe a -> a -> Bool
-isEqual maybe a =
-    maybe
-        |> Maybe.map ((==) a)
-        |> Maybe.withDefault False
+renderPrice : Model -> Html Msg
+renderPrice { selected } =
+    case selected of
+        CitySelected selectedCity ->
+            div [ class "price" ]
+                [ small [] [ text "from $" ]
+                , text <| toString selectedCity.price
+                ]
+
+        _ ->
+            text ""
