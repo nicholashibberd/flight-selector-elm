@@ -4,6 +4,7 @@ import Dict
 import Html exposing (Html, div, option, select, small, text)
 import Html.Attributes exposing (class, selected)
 import Html.Events exposing (onInput)
+import List.Extra exposing (uniqueBy)
 
 
 main =
@@ -131,11 +132,8 @@ view model =
                 , onInput SelectCountry
                 ]
               <|
-                [ renderOption False "Select Country"
-                , renderCountry model.selected Australia
-                , renderCountry model.selected England
-                , renderCountry model.selected France
-                ]
+                renderOption False "Select Country"
+                    :: (activeCountries |> List.map (renderCountry model.selected))
             ]
         , div []
             [ select
@@ -143,38 +141,36 @@ view model =
                 , onInput SelectCity
                 ]
               <|
-                [ renderOption False "Select City"
-                ]
-                    ++ (activeCities model |> List.map (renderCity model.selected))
+                renderOption False "Select City"
+                    :: (activeCities model |> List.map (renderCity model.selected))
             ]
         , renderPrice model
         ]
-
-
-countryName : Country -> String
-countryName country =
-    case country of
-        Australia ->
-            "Australia"
-
-        England ->
-            "England"
-
-        France ->
-            "France"
 
 
 activeCities : Model -> List City
 activeCities { selected } =
     case selected of
         CitySelected selectedCity ->
-            List.filter (.country >> (==) selectedCity.country) cities
+            citiesIn selectedCity.country
 
         CountrySelected selectedCountry ->
-            List.filter (.country >> (==) selectedCountry) cities
+            citiesIn selectedCountry
 
         None ->
             cities
+
+
+citiesIn : Country -> List City
+citiesIn country =
+    List.filter (.country >> (==) country) cities
+
+
+activeCountries : List Country
+activeCountries =
+    cities
+        |> List.map .country
+        |> uniqueBy toString
 
 
 renderCountry : Selected -> Country -> Html Msg
@@ -191,7 +187,7 @@ renderCountry selected country =
                 None ->
                     False
     in
-        renderOption isSelected <| countryName country
+        renderOption isSelected <| toString country
 
 
 renderCity : Selected -> City -> Html Msg
