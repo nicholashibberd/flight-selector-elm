@@ -94,20 +94,28 @@ update msg model =
             { model | selected = setCity city }
 
 
-setCountry : String -> Selected
-setCountry string =
+toCountry : String -> Maybe Country
+toCountry string =
     case string of
         "Australia" ->
-            CountrySelected Australia
+            Just Australia
 
         "England" ->
-            CountrySelected England
+            Just England
 
         "France" ->
-            CountrySelected France
+            Just France
 
         _ ->
-            None
+            Nothing
+
+
+setCountry : String -> Selected
+setCountry string =
+    string
+        |> toCountry
+        |> Maybe.map CountrySelected
+        |> Maybe.withDefault None
 
 
 setCity : String -> Selected

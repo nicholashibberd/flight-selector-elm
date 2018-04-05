@@ -14133,23 +14133,32 @@ var _user$project$Main$activeCountries = A2(
 			return _.country;
 		},
 		_user$project$Main$cities));
+var _user$project$Main$toCountry = function (string) {
+	var _p9 = string;
+	switch (_p9) {
+		case 'Australia':
+			return _elm_lang$core$Maybe$Just(_user$project$Main$Australia);
+		case 'England':
+			return _elm_lang$core$Maybe$Just(_user$project$Main$England);
+		case 'France':
+			return _elm_lang$core$Maybe$Just(_user$project$Main$France);
+		default:
+			return _elm_lang$core$Maybe$Nothing;
+	}
+};
 var _user$project$Main$None = {ctor: 'None'};
 var _user$project$Main$model = {selected: _user$project$Main$None};
 var _user$project$Main$CountrySelected = function (a) {
 	return {ctor: 'CountrySelected', _0: a};
 };
 var _user$project$Main$setCountry = function (string) {
-	var _p9 = string;
-	switch (_p9) {
-		case 'Australia':
-			return _user$project$Main$CountrySelected(_user$project$Main$Australia);
-		case 'England':
-			return _user$project$Main$CountrySelected(_user$project$Main$England);
-		case 'France':
-			return _user$project$Main$CountrySelected(_user$project$Main$France);
-		default:
-			return _user$project$Main$None;
-	}
+	return A2(
+		_elm_lang$core$Maybe$withDefault,
+		_user$project$Main$None,
+		A2(
+			_elm_lang$core$Maybe$map,
+			_user$project$Main$CountrySelected,
+			_user$project$Main$toCountry(string)));
 };
 var _user$project$Main$CitySelected = function (a) {
 	return {ctor: 'CitySelected', _0: a};
