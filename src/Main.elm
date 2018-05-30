@@ -15,55 +15,65 @@ main =
         }
 
 
-type Country
-    = Australia
-    | England
-    | France
-
-
-type Selected
-    = CitySelected City
-    | CountrySelected Country
-    | None
+type alias Country =
+    { name : String }
 
 
 type alias City =
     { country : Country
     , name : String
-    , price : Int
+    , price : Price
     }
+
+
+type alias Price =
+    Int
+
+
+type Selected
+    = CitySelected City
+    | CountrySelected Country
+    | NothingSelected
 
 
 type alias Model =
     { selected : Selected }
 
 
+cities : List City
 cities =
     [ { name = "Melbourne"
-      , country = Australia
+      , country = { name = "Australia" }
       , price = 100
       }
     , { name = "Sydney"
-      , country = Australia
+      , country = { name = "Australia" }
       , price = 110
       }
     , { name = "London"
-      , country = England
+      , country = { name = "England" }
       , price = 1000
       }
     , { name = "Manchester"
-      , country = England
+      , country = { name = "England" }
       , price = 1200
       }
     , { name = "Paris"
-      , country = France
+      , country = { name = "France" }
       , price = 900
       }
     , { name = "Lille"
-      , country = France
+      , country = { name = "France" }
       , price = 800
       }
     ]
+
+
+countries : List City -> List Country
+countries cities =
+    cities
+        |> List.map .country
+        |> uniqueBy toString
 
 
 
@@ -72,7 +82,7 @@ cities =
 
 model : Model
 model =
-    { selected = None }
+    { selected = NothingSelected }
 
 
 
@@ -94,28 +104,14 @@ update msg model =
             { model | selected = setCity city }
 
 
-toCountry : String -> Maybe Country
-toCountry string =
-    case string of
-        "Australia" ->
-            Just Australia
-
-        "England" ->
-            Just England
-
-        "France" ->
-            Just France
-
-        _ ->
-            Nothing
-
-
 setCountry : String -> Selected
 setCountry string =
-    string
-        |> toCountry
+    cities
+        |> countries
+        |> List.filter (.name >> (==) string)
+        |> List.head
         |> Maybe.map CountrySelected
-        |> Maybe.withDefault None
+        |> Maybe.withDefault NothingSelected
 
 
 setCity : String -> Selected
@@ -124,7 +120,7 @@ setCity string =
         |> List.filter (.name >> (==) string)
         |> List.head
         |> Maybe.map CitySelected
-        |> Maybe.withDefault None
+        |> Maybe.withDefault NothingSelected
 
 
 
@@ -133,52 +129,43 @@ setCity string =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ div [ class "form-group" ]
-            [ select
-                [ class "form-control"
-                , onInput SelectCountry
-                ]
-              <|
-                renderOption False "Select Country"
-                    :: (activeCountries |> List.map (renderCountry model.selected))
-            ]
-        , div []
-            [ select
-                [ class "form-control"
-                , onInput SelectCity
-                ]
-              <|
-                renderOption False "Select City"
-                    :: (activeCities model |> List.map (renderCity model.selected))
-            ]
+    div [ class "form-group" ]
+        [ select [ class "form-control", onInput SelectCountry ] <|
+            renderOption False "Select Country"
+                :: countryOptions model
+        , select [ class "form-control", onInput SelectCity ] <|
+            renderOption False "Select City"
+                :: cityOptions model
         , renderPrice model
         ]
+
+
+countryOptions : Model -> List (Html Msg)
+countryOptions { selected } =
+    List.map (renderCountry selected) <| countries cities
+
+
+cityOptions : Model -> List (Html Msg)
+cityOptions model =
+    model |> activeCities |> List.map (renderCity model.selected)
 
 
 activeCities : Model -> List City
 activeCities { selected } =
     case selected of
         CitySelected selectedCity ->
-            citiesIn selectedCity.country
+            citiesIn cities selectedCity.country
 
         CountrySelected selectedCountry ->
-            citiesIn selectedCountry
+            citiesIn cities selectedCountry
 
-        None ->
+        NothingSelected ->
             cities
 
 
-citiesIn : Country -> List City
-citiesIn country =
+citiesIn : List City -> Country -> List City
+citiesIn cities country =
     List.filter (.country >> (==) country) cities
-
-
-activeCountries : List Country
-activeCountries =
-    cities
-        |> List.map .country
-        |> uniqueBy toString
 
 
 renderCountry : Selected -> Country -> Html Msg
@@ -192,10 +179,10 @@ renderCountry selected country =
                 CountrySelected selectedCountry ->
                     country == selectedCountry
 
-                None ->
+                NothingSelected ->
                     False
     in
-        renderOption isSelected <| toString country
+        renderOption isSelected country.name
 
 
 renderCity : Selected -> City -> Html Msg
@@ -222,8 +209,8 @@ renderPrice { selected } =
     case selected of
         CitySelected selectedCity ->
             div [ class "price" ]
-                [ small [] [ text "from $" ]
-                , text <| toString selectedCity.price
+                [ small [] [ text "from" ]
+                , text <| " $" ++ toString selectedCity.price
                 ]
 
         _ ->
